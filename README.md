@@ -22,14 +22,45 @@ python -m playwright install --with-deps chromium
 python -m pytest tests/ -n 3 --browser chromium -v
 ```
 
-### 3) Open HTML report
+### 3) Open Playwright artifacts
 
 ```zsh
-open reports/report.html
+open reports/playwright-report
 ```
 
-Playwright traces/videos/screenshots are also saved in `reports/playwright-report`.
+Playwright traces/videos/screenshots are saved in `reports/playwright-report`.
+Screenshots and videos are retained only for failed tests.
 
+---
+
+## Failure Artifacts
+
+On test failure, Playwright automatically captures:
+
+| Artifact | File | How to open |
+|---|---|---|
+| Screenshot | `test-failed-1.png` | Any image viewer |
+| Video | `video.webm` | Any media player |
+| Trace | `trace.zip` | `python -m playwright show-trace <path>` |
+
+Each failed test gets its own folder under `reports/playwright-report/`, named after the test node ID.
+
+### View trace locally
+
+```zsh
+python -m playwright show-trace reports/playwright-report/<failed-test-folder>/trace.zip
+```
+
+### Example: failed CI run with artifacts
+
+The run below demonstrates a failure with screenshot and video captured and uploaded as CI artifacts:
+
+🔗 [Example failed run — CI #25169556295](https://github.com/yuritsouker-automation/qa-automation-assignment-yuri-tsouker/actions/runs/25169556295)
+
+Download the `playwright-report` artifact from the **Artifacts** section of that run to see:
+- `test-failed-1.png` — screenshot at the moment of failure
+- `video.webm` — full test session recording
+- `trace.zip` — interactive Playwright trace viewer file
 
 ---
 
@@ -95,6 +126,4 @@ GitHub Actions workflow is in `.github/workflows/ci.yml` and runs tests on:
 
 CI retains and uploads:
 
-- Playwright artifacts from `reports/playwright-report`
-- Pytest HTML report from `reports/report.html`
-
+- Playwright artifacts from `reports/playwright-report` (screenshots, videos, traces for failed tests)
