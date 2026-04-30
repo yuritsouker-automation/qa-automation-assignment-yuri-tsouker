@@ -38,6 +38,15 @@ jobs:
         if: always()
         run: allure generate reports/allure-results -o reports/allure-report --clean
 
+      - name: Upload Playwright Failure Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: reports/playwright-artifacts/
+          if-no-files-found: warn
+          retention-days: 30
+
       - name: Upload Allure Report
         if: always()
         uses: actions/upload-artifact@v4
