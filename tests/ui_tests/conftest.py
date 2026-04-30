@@ -14,14 +14,9 @@ with open(CREDENTIALS_PATH) as f:
     _credentials = json.load(f)
 
 
-PLAYWRIGHT_ARTIFACTS_DIR = os.path.join(
-    os.path.dirname(__file__), "..", "..", "reports", "playwright-artifacts"
-)
-
-
-def _artifact_dir_for_test(nodeid: str) -> str:
+def _artifact_dir_for_test(nodeid: str, output_dir: str) -> str:
     safe_nodeid = re.sub(r"[^a-z0-9]+", "-", nodeid.lower()).strip("-")
-    return os.path.join(PLAYWRIGHT_ARTIFACTS_DIR, safe_nodeid)
+    return os.path.join(output_dir, safe_nodeid)
 
 
 def _attach_if_exists(file_path: str, name: str, attachment_type) -> None:
@@ -40,11 +35,12 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo):
 
     failed = getattr(item, "rep_setup", None) and item.rep_setup.failed
     failed = failed or (getattr(item, "rep_call", None) and item.rep_call.failed)
-
     if not failed:
         return
 
-    artifact_dir = _artifact_dir_for_test(item.nodeid)
+    output_dir = item.config.getoption("output")
+    artifact_dir = _artifact_dir_for_test(item.nodeid, output_dir)
+
     _attach_if_exists(
         os.path.join(artifact_dir, "test-failed-1.png"),
         name="failure-screenshot",
@@ -60,6 +56,7 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo):
         name="failure-video",
         attachment_type="video/webm",
     )
+
 
 
 @pytest.fixture

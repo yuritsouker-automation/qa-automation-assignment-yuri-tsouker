@@ -28,15 +28,6 @@ pytest tests/ -n 3 --browser chromium -v
 allure serve reports/allure-results
 ```
 
-### UI failure artifacts
-
-On failed UI runs, Playwright stores screenshots, traces, and videos in:
-
-```text
-reports/playwright-artifacts/
-```
-
-In GitHub Actions, that folder is uploaded as the `playwright-artifacts` artifact for failed-run triage.
 
 ---
 
@@ -89,4 +80,6 @@ GitHub Actions workflow is in `.github/workflows/ci.yml` and runs tests on:
 - every branch push
 - pull requests to `main`
 - manual trigger (`workflow_dispatch`)
+
+CI retains and uploads only the Allure report artifact.
 
