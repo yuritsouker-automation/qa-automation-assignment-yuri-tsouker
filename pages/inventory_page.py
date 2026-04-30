@@ -1,8 +1,11 @@
+import os
+
 from playwright.sync_api import Page, Locator
 
 
 class InventoryPage:
-    URL = "https://www.saucedemo.com/inventory.html"
+    URL_PATH = "/inventory.html"
+    DEFAULT_BASE_URL = "https://www.saucedemo.com"
 
     # Sort options exposed as constants for use in tests
     SORT_NAME_A_Z = "az"
@@ -10,8 +13,13 @@ class InventoryPage:
     SORT_PRICE_LOW_HIGH = "lohi"
     SORT_PRICE_HIGH_LOW = "hilo"
 
-    def __init__(self, page: Page):
+    def __init__(self, page: Page, base_url: str | None = None):
         self.page = page
+        self._base_url = (
+            base_url
+            or os.environ.get("UI_BASE_URL")
+            or self.DEFAULT_BASE_URL
+        ).rstrip("/")
 
         # ── Header ────────────────────────────────────────────────────────────
         self.header_container = page.locator('[data-test="header-container"]')
@@ -53,7 +61,7 @@ class InventoryPage:
 
     def navigate(self):
         """Go directly to the inventory page URL."""
-        self.page.goto(self.URL)
+        self.page.goto(f"{self._base_url}{self.URL_PATH}")
 
     def wait_for_page_load(self):
         """Wait until the product list is visible."""

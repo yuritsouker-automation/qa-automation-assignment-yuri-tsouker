@@ -1,6 +1,7 @@
 import json
 import os
 
+import pytest
 from playwright.sync_api import Page
 
 from pages.login_page import LoginPage
@@ -16,9 +17,10 @@ with open(CREDENTIALS_PATH) as f:
 
 
 class TestLogin:
-    def test_login_standard_user(self, page: Page):
+    @pytest.mark.parametrize("user", ["standard_user"], ids=["standard_user"])
+    def test_login_standard_user(self, page: Page, user: str):
         """
-        Verify that a valid user (standard_user) can log in and then log out successfully.
+        Verify that a valid user can log in and then log out successfully.
         Steps:
           1. Navigate to https://www.saucedemo.com/
           2. Enter valid credentials loaded from test_data/credentials.json
@@ -35,7 +37,7 @@ class TestLogin:
         login_page.navigate()
 
         # 2. Login with credentials loaded from test_data/credentials.json
-        creds = _credentials["standard_user"]
+        creds = _credentials[user]
         login_page.login(username=creds["username"], password=creds["password"])
 
         # 3. Wait until the header container is visible
@@ -57,12 +59,13 @@ class TestLogin:
             f"Expected login logo text 'Swag Labs', got {login_page.login_logo.inner_text().strip()!r}"
         )
 
-    def test_login_invalid_credentials_shows_error_message(self, page: Page):
+    @pytest.mark.parametrize("user", ["invalid_user"], ids=["invalid_user"])
+    def test_login_invalid_credentials_shows_error_message(self, page: Page, user: str):
         """
         Verify that submitting an incorrect password displays the expected error message.
         Steps:
           1. Navigate to https://www.saucedemo.com/
-          2. Enter a valid username with a wrong password (from test_data/credentials.json)
+          2. Enter credentials from test_data/credentials.json for the parametrized invalid user
           3. Click the login button
           4. Wait for the error element (data-test="error") to become visible
         Expected: The exact error text matches
@@ -75,7 +78,7 @@ class TestLogin:
         login_page.navigate()
 
         # 2. Login with wrong password from test_data/credentials.json
-        creds = _credentials["invalid_user"]
+        creds = _credentials[user]
         login_page.login(username=creds["username"], password=creds["password"])
 
         # 3. Wait for the error element to be visible
@@ -89,13 +92,14 @@ class TestLogin:
             f"  Actual:   {actual_error!r}"
         )
 
-    def test_login_error_user_shows_error_button(self, page: Page):
+    @pytest.mark.parametrize("user", ["error_user"], ids=["error_user"])
+    def test_login_error_user_shows_error_button(self, page: Page, user: str):
         """
-        Verify that logging in with error_user and an invalid password (123) surfaces the
+        Verify that logging in with the parametrized error user surfaces the
         error dismiss button on the page.
         Steps:
           1. Navigate to https://www.saucedemo.com/
-          2. Enter credentials for error_user / 123 (from test_data/credentials.json)
+          2. Enter credentials for the parametrized user (from test_data/credentials.json)
           3. Click the login button
           4. Wait for data-test="error-button" to become visible
         Expected: data-test="error-button" is visible, confirming the error state is shown.
@@ -105,15 +109,12 @@ class TestLogin:
         # 1. Navigate to the app
         login_page.navigate()
 
-        # 2. Login with error_user / 123 from test_data/credentials.json
-        creds = _credentials["error_user"]
+        # 2. Login with user from test_data/credentials.json
+        creds = _credentials[user]
         login_page.login(username=creds["username"], password=creds["password"])
 
         # 3. Assert the error-button element is visible
         login_page.error_button.wait_for(state="visible")
         assert login_page.error_button.is_visible(), (
-            "data-test='error-button' should be visible after failed login with error_user"
+            "data-test='error-button' should be visible after failed login with configured user"
         )
-
-
-

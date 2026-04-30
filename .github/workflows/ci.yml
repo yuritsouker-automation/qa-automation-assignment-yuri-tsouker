@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "**" ]
   pull_request:
-    branches: [ "**" ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -14,10 +14,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.0
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: "3.13"
           cache: "pip"
@@ -31,18 +31,21 @@ jobs:
       - name: Run tests (3 parallel workers)
         run: python -m pytest tests/ -n 3 --browser chromium -v
 
-      - name: Install Allure CLI
-        run: npm install -g allure-commandline
-
-      - name: Generate Allure Report
+      - name: Upload Playwright Report
         if: always()
-        run: allure generate reports/allure-results -o reports/allure-report --clean
-
-      - name: Upload Allure Report
-        if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.4.0
         with:
-          name: allure-report
-          path: reports/allure-report/
+          name: playwright-report
+          path: reports/playwright-report/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload Pytest HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4.4.0
+        with:
+          name: pytest-html-report
+          path: reports/report.html
+          if-no-files-found: warn
           retention-days: 30
 
