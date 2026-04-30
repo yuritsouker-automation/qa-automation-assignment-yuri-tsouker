@@ -4,7 +4,7 @@
 
 This project uses Python + pytest + Playwright for UI, and `requests` + pytest for API.
 
-- **Why Python/pytest: Fast to write, readable tests, rich fixture model, and a strong ecosystem (xdist, allure, parametrize). Most importantly, all products at Modelyo are written in Python — keeping the automation framework in the same language eliminates context switching, makes collaboration with developers significantly easier, and demonstrates my ability to design and build a production-ready automation framework from scratch in Python when the business requires it.
+- **Why Python/pytest: Fast to write, readable tests, rich fixture model, and a strong ecosystem (xdist, plugins, parametrize). Most importantly, all products at Modelyo are written in Python — keeping the automation framework in the same language eliminates context switching, makes collaboration with developers significantly easier, and demonstrates my ability to design and build a production-ready automation framework from scratch in Python when the business requires it.
 - **Why Playwright for UI:** better default auto-wait behavior, first-class modern browser support, stable locators, and cleaner debugging ergonomics for dynamic apps.
 - **Why not Selenium here:** Selenium is mature and still valid, but usually needs more explicit synchronization and framework glue to reach the same reliability level.
 
@@ -59,12 +59,13 @@ Mitigations:
 In CI, on failure, on-call gets:
 
 - GitHub Actions job logs (failed test names, stack traces, command output).
-- Allure artifact (`reports/allure-report`) with test history, steps, and failure details.
+- Playwright artifact (`reports/playwright-report`) with failure traces, screenshots, and videos.
+- Pytest HTML artifact (`reports/report.html`) for a quick run-level summary.
 
 Path to root cause at 3am:
 
 1. Open failed workflow run and identify failing test node.
-2. Open Allure artifact and inspect failed test details + assertion message.
+2. Open Playwright/HTML artifacts and inspect failure details + assertion message.
 3. Re-run the same test locally with the same browser/flags.
 4. Check page-object locator/action in `pages/*` and fixture setup in `conftest.py`.
 5. Classify: product regression vs locator drift vs data/env instability.

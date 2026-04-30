@@ -1,8 +1,9 @@
 import json
 import os
 import re
+from base64 import b64encode
+from pathlib import Path
 
-import allure
 import pytest
 from playwright.sync_api import Page
 
@@ -14,14 +15,31 @@ with open(CREDENTIALS_PATH) as f:
     _credentials = json.load(f)
 
 
-def _artifact_dir_for_test(nodeid: str, output_dir: str) -> str:
+def _artifact_dir_for_test(nodeid: str, output_dir: str) -> Path:
     safe_nodeid = re.sub(r"[^a-z0-9]+", "-", nodeid.lower()).strip("-")
-    return os.path.join(output_dir, safe_nodeid)
+    return Path(output_dir) / safe_nodeid
 
 
-def _attach_if_exists(file_path: str, name: str, attachment_type) -> None:
-    if os.path.exists(file_path):
-        allure.attach.file(file_path, name=name, attachment_type=attachment_type)
+def _report_dir(config: pytest.Config) -> Path:
+    html_path = getattr(config.option, "htmlpath", None)
+    if not html_path:
+        return Path(config.rootpath)
+    path = Path(html_path)
+    if not path.is_absolute():
+        path = Path(config.rootpath) / path
+    return path.parent
+
+
+def _artifact_link(report_dir: Path, file_path: Path) -> str:
+    try:
+        return str(file_path.relative_to(report_dir))
+    except ValueError:
+        return file_path.as_posix()
+
+
+def _image_data_url(file_path: Path) -> str:
+    encoded = b64encode(file_path.read_bytes()).decode("ascii")
+    return f"data:image/png;base64,{encoded}"
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -38,25 +56,27 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo):
     if not failed:
         return
 
+    pytest_html = item.config.pluginmanager.getplugin("html")
     output_dir = item.config.getoption("output")
+    if pytest_html is None or not output_dir:
+        return
+
     artifact_dir = _artifact_dir_for_test(item.nodeid, output_dir)
+    report_dir = _report_dir(item.config)
 
-    _attach_if_exists(
-        os.path.join(artifact_dir, "test-failed-1.png"),
-        name="failure-screenshot",
-        attachment_type=allure.attachment_type.PNG,
-    )
-    _attach_if_exists(
-        os.path.join(artifact_dir, "trace.zip"),
-        name="playwright-trace",
-        attachment_type=allure.attachment_type.ZIP,
-    )
-    _attach_if_exists(
-        os.path.join(artifact_dir, "video.webm"),
-        name="failure-video",
-        attachment_type="video/webm",
-    )
+    extras = list(getattr(report, "extras", []))
+    screenshot_path = artifact_dir / "test-failed-1.png"
+    if screenshot_path.exists():
+        extras.append(pytest_html.extras.image(_image_data_url(screenshot_path), name="Failure Screenshot"))
 
+    linked_artifacts = [
+        (artifact_dir / "video.webm", "Failure Video"),
+        (artifact_dir / "trace.zip", "Playwright Trace"),
+    ]
+    for file_path, label in linked_artifacts:
+        if file_path.exists():
+            extras.append(pytest_html.extras.url(_artifact_link(report_dir, file_path), name=label))
+    report.extras = extras
 
 
 @pytest.fixture

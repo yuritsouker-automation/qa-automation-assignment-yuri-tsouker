@@ -1,6 +1,6 @@
 # QA Automation Assignment
 
-UI and API automation suite using `pytest`, `playwright`, `requests`, `pytest-xdist`, and `allure`.
+UI and API automation suite using `pytest`, `playwright`, `requests`, and `pytest-xdist`.
 
 ## Run in Under 5 Minutes
 
@@ -22,11 +22,13 @@ python -m playwright install --with-deps chromium
 pytest tests/ -n 3 --browser chromium -v
 ```
 
-### 3) Open Allure report
+### 3) Open HTML report
 
 ```zsh
-allure serve reports/allure-results
+open reports/report.html
 ```
+
+Playwright traces/videos/screenshots are also saved in `reports/playwright-report`.
 
 
 ---
@@ -51,10 +53,10 @@ pytest tests/api_tests -n 3 -v
 pytest tests/ui_tests --browser chromium --headed -v
 ```
 
-### Clean old Allure artifacts
+### Clean old Playwright artifacts
 
 ```zsh
-rm -rf reports/allure-results/* reports/allure-report/*
+rm -rf reports/playwright-report/*
 ```
 
 ---
@@ -62,14 +64,7 @@ rm -rf reports/allure-results/* reports/allure-report/*
 ## Prerequisites
 
 - Python 3.13 (CI uses 3.13)
-- Node.js/npm only if you need to install Allure CLI locally
-- Allure CLI available in `PATH`
-
-Install Allure CLI (if missing):
-
-```zsh
-npm install -g allure-commandline
-```
+- Chromium browser dependencies for Playwright (installed by `python -m playwright install --with-deps chromium`)
 
 ---
 
@@ -81,5 +76,8 @@ GitHub Actions workflow is in `.github/workflows/ci.yml` and runs tests on:
 - pull requests to `main`
 - manual trigger (`workflow_dispatch`)
 
-CI retains and uploads only the Allure report artifact.
+CI retains and uploads:
+
+- Playwright artifacts from `reports/playwright-report`
+- Pytest HTML report from `reports/report.html`
 
