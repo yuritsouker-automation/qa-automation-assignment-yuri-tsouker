@@ -1,0 +1,22 @@
+{
+  "add_to_cart_two_items": [
+    {
+      "name": "Sauce Labs Backpack",
+      "price": 29.99
+    },
+    {
+      "name": "Sauce Labs Bike Light",
+      "price": 9.99
+    }
+  ],
+  "checkout_single_item": {
+    "name": "Sauce Labs Backpack",
+    "price": 29.99
+  },
+  "checkout_user_info": {
+    "first_name": "Yuri",
+    "last_name": "Tsouker",
+    "postal_code": "12345"
+  }
+}
+
