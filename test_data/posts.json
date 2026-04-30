@@ -1,0 +1,17 @@
+{
+  "valid_post_id": 1,
+  "non_existent_post_id": 99999,
+  "create_post_payload": {
+    "title": "foo",
+    "body": "bar",
+    "userId": 1
+  },
+  "update_post_payload": {
+    "id": 1,
+    "title": "foo",
+    "body": "bar",
+    "userId": 1
+  },
+  "delete_post_id": 1
+}
+
