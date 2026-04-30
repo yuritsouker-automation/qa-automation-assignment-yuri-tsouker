@@ -71,6 +71,12 @@ Thumbs.db
 # Logs
 *.log
 
+# Allure reports
+reports/allure-results/*
+!reports/allure-results/.gitkeep
+reports/allure-report/*
+!reports/allure-report/.gitkeep
+
 # Environment variables
 .env
 .env.*
