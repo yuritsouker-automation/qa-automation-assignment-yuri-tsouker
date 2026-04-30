@@ -127,3 +127,5 @@ GitHub Actions workflow is in `.github/workflows/ci.yml` and runs tests on:
 CI retains and uploads:
 
 - Playwright artifacts from `reports/playwright-report` (screenshots, videos, traces for failed tests)
+
+Test        
