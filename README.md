@@ -51,13 +51,17 @@ Each failed test gets its own folder under `reports/playwright-report/`, named a
 python -m playwright show-trace reports/playwright-report/<failed-test-folder>/trace.zip
 ```
 
-### Example: failed CI run with artifacts
+### Example CI runs
 
-The run below demonstrates a failure with screenshot and video captured and uploaded as CI artifacts:
+**✅ All tests passing:**
+
+🔗 [Example successful run — CI #25172010810](https://github.com/yuritsouker-automation/qa-automation-assignment-yuri-tsouker/actions/runs/25172010810)
+
+**❌ Tests with failures (screenshot + video captured):**
 
 🔗 [Example failed run — CI #25169556295](https://github.com/yuritsouker-automation/qa-automation-assignment-yuri-tsouker/actions/runs/25169556295)
 
-Download the `playwright-report` artifact from the **Artifacts** section of that run to see:
+Download the `playwright-report` artifact from the **Artifacts** section of a failed run to see:
 - `test-failed-1.png` — screenshot at the moment of failure
 - `video.webm` — full test session recording
 - `trace.zip` — interactive Playwright trace viewer file
