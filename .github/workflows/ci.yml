@@ -31,3 +31,18 @@ jobs:
       - name: Run tests (3 parallel workers)
         run: python -m pytest tests/ -n 3 --browser chromium -v
 
+      - name: Install Allure CLI
+        run: npm install -g allure-commandline
+
+      - name: Generate Allure Report
+        if: always()
+        run: allure generate reports/allure-results -o reports/allure-report --clean
+
+      - name: Upload Allure Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: reports/allure-report/
+          retention-days: 30
+
