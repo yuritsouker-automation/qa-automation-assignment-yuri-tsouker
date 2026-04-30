@@ -73,12 +73,27 @@ Path to root cause at 3am:
 
 ## 5) What I would do next (next 2 days)
 
-Highest-value next step: **stabilization + observability hardening**.
+Highest-value next step: **Build a deterministic test data and fixture factory to enable true test independence and zero-flake scaling.**
 
-- Add richer failure artifacts for UI (trace/video/screenshot on failure) and attach to CI artifacts.
-- Add marker-based test taxonomy (`smoke`, `regression`, `api`, `ui`) plus CI matrix strategy.
-- Add API schema helpers and reusable assertions to reduce duplication.
-- Introduce environment-configurable base URLs for UI pages (remove hardcoded UI URLs from page objects).
+The critical issue: as the suite grows from 5 tests to 100+, tests that share implicit state (users, cart contents, inventory mutations) will start intermittently failing, especially under parallelism. The current approach works fine now because fixtures are simple, but it doesn't scale.
 
-Why this next: it improves signal quality, reduces time-to-diagnosis, and makes the suite scale safely before just adding more test count.
+**What I'd build:**
+
+1. **Test data factory + seeding layer** (`test_data/factory.py`):
+   - Deterministic, repeatable product/user/session generation keyed by test ID.
+   - Ability to spin up isolated "test tenants" or dedicated test users per worker (via `pytest-xdist` worker ID).
+   - Ensure cart/inventory state is reset or isolated per test automatically, not manually in teardown.
+   - Move from static JSON files to programmatic factories that generate data on-the-fly.
+
+2. **Environment-aware base URL injection** (extend `conftest.py`):
+   - Pull base URLs from environment variables (or fixture parametrization).
+   - Allow tests to run against different environments (local, staging, prod) without code changes.
+   - This directly addresses the hardcoded `Saucedemo` URL limitation noted in the DESIGN.
+
+3. **Assertion helpers + expected-vs-actual clarity** (new `test_utils/assertions.py`):
+   - Reusable assertion functions that produce structured, grep-able failure messages.
+   - Example: `assert_product_in_cart(actual_items, expected_sku, qty)` vs generic `assert expected == actual`.
+   - Reduces noise in failure logs and makes triage faster.
+
+**Why this first:** Because it's the inflection point. You can write 10 tests without it; you *cannot* write 100 reliable tests without it. Every downstream feature (CI matrix, parallel testing, environment parity, multi-user scenarios) depends on this foundation. It's the difference between a fragile suite that breaks under load vs. one that scales deterministically. Plus, it pays for itself within a week once the team starts writing more tests—they'll spend less time debugging false positives and more time finding real bugs.
 
