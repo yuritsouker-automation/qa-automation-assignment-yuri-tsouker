@@ -15,18 +15,23 @@ with open(CREDENTIALS_PATH) as f:
     _credentials = json.load(f)
 
 
-def _artifact_dir_for_test(nodeid: str, output_dir: str) -> Path:
+def _resolve_path(root: Path, path_value: str) -> Path:
+    path = Path(path_value)
+    if not path.is_absolute():
+        path = root / path
+    return path
+
+
+def _artifact_dir_for_test(nodeid: str, output_dir: str, root: Path) -> Path:
     safe_nodeid = re.sub(r"[^a-z0-9]+", "-", nodeid.lower()).strip("-")
-    return Path(output_dir) / safe_nodeid
+    return _resolve_path(root, output_dir) / safe_nodeid
 
 
 def _report_dir(config: pytest.Config) -> Path:
     html_path = getattr(config.option, "htmlpath", None)
     if not html_path:
         return Path(config.rootpath)
-    path = Path(html_path)
-    if not path.is_absolute():
-        path = Path(config.rootpath) / path
+    path = _resolve_path(Path(config.rootpath), html_path)
     return path.parent
 
 
@@ -37,9 +42,9 @@ def _artifact_link(report_dir: Path, file_path: Path) -> str:
         return file_path.as_posix()
 
 
-def _image_data_url(file_path: Path) -> str:
-    encoded = b64encode(file_path.read_bytes()).decode("ascii")
-    return f"data:image/png;base64,{encoded}"
+def _image_base64(file_path: Path) -> str:
+    # pytest-html self-contained report expects raw base64 for images.
+    return b64encode(file_path.read_bytes()).decode("ascii")
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -61,13 +66,16 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo):
     if pytest_html is None or not output_dir:
         return
 
-    artifact_dir = _artifact_dir_for_test(item.nodeid, output_dir)
+    artifact_dir = _artifact_dir_for_test(item.nodeid, output_dir, Path(item.config.rootpath))
     report_dir = _report_dir(item.config)
 
     extras = list(getattr(report, "extras", []))
     screenshot_path = artifact_dir / "test-failed-1.png"
     if screenshot_path.exists():
-        extras.append(pytest_html.extras.image(_image_data_url(screenshot_path), name="Failure Screenshot"))
+        extras.append(pytest_html.extras.image(_image_base64(screenshot_path), name="Failure Screenshot"))
+        extras.append(
+            pytest_html.extras.url(_artifact_link(report_dir, screenshot_path), name="Open Failure Screenshot")
+        )
 
     linked_artifacts = [
         (artifact_dir / "video.webm", "Failure Video"),
