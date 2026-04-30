@@ -4,6 +4,18 @@ import json
 import os
 
 from src.api import ApiClient
+from test_utils.assertions import (
+    assert_all_items_have_fields,
+    assert_array_length,
+    assert_auto_generated_id,
+    assert_empty_body,
+    assert_json_array,
+    assert_non_empty,
+    assert_payload_echoed,
+    assert_schema,
+    assert_status_code,
+    assert_status_code_in,
+)
 
 POSTS_PATH = "/posts"
 EXPECTED_POSTS_COUNT = 100
@@ -25,23 +37,14 @@ def test_get_posts_returns_200_json_array_and_expected_schema(api_client: ApiCli
     response = api_client.get(POSTS_PATH)
 
     # 2. Verify status code is 200
-    assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
+    assert_status_code(response, 200)
 
     # 3. Parse response and validate top-level array contract
     payload = response.json()
-    assert isinstance(payload, list), f"Expected response body to be a list, got {type(payload).__name__}"
-    assert len(payload) == EXPECTED_POSTS_COUNT, (
-        f"Expected {EXPECTED_POSTS_COUNT} posts, got {len(payload)}"
-    )
+    assert_array_length(payload, EXPECTED_POSTS_COUNT)
 
     # 4. Validate required fields and field types on a sample item
-    first_item = payload[0]
-    for field_name, expected_type in REQUIRED_FIELDS.items():
-        assert field_name in first_item, f"Missing field '{field_name}' in response item"
-        assert isinstance(first_item[field_name], expected_type), (
-            f"Field '{field_name}' should be of type {expected_type.__name__}, "
-            f"got {type(first_item[field_name]).__name__}"
-        )
+    assert_schema(payload[0], REQUIRED_FIELDS, index=0)
 
 
 def test_list_all_resources_returns_json_array(api_client: ApiClient):
@@ -53,17 +56,15 @@ def test_list_all_resources_returns_json_array(api_client: ApiClient):
     response = api_client.get(POSTS_PATH)
 
     # 2. Verify status code is 200
-    assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
+    assert_status_code(response, 200)
 
     # 3. Parse response JSON and verify list contract
     payload = response.json()
-    assert isinstance(payload, list), f"Expected response body to be a list, got {type(payload).__name__}"
-    assert len(payload) > 0, "Expected posts list to contain at least one resource"
+    assert_json_array(payload)
+    assert_non_empty(payload, context="posts list")
 
     # 4. Validate required fields exist on each resource item
-    for index, item in enumerate(payload):
-        for field_name in REQUIRED_FIELDS:
-            assert field_name in item, f"Item at index {index} is missing field '{field_name}'"
+    assert_all_items_have_fields(payload, set(REQUIRED_FIELDS.keys()))
 
 
 def test_get_post_by_valid_id_returns_200(api_client: ApiClient):
@@ -72,7 +73,7 @@ def test_get_post_by_valid_id_returns_200(api_client: ApiClient):
     response = api_client.get(f"{POSTS_PATH}/{_posts_test_data['valid_post_id']}")
 
     # 2. Verify status code is 200
-    assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
+    assert_status_code(response, 200)
 
 
 def test_get_post_by_non_existent_id_returns_404(api_client: ApiClient):
@@ -81,7 +82,7 @@ def test_get_post_by_non_existent_id_returns_404(api_client: ApiClient):
     response = api_client.get(f"{POSTS_PATH}/{_posts_test_data['non_existent_post_id']}")
 
     # 2. Verify status code is 404
-    assert response.status_code == 404, f"Expected status code 404, got {response.status_code}"
+    assert_status_code(response, 404)
 
 
 def test_create_post_returns_201_and_echoes_payload(api_client: ApiClient):
@@ -95,16 +96,12 @@ def test_create_post_returns_201_and_echoes_payload(api_client: ApiClient):
     )
 
     # 2. Verify status code is 201
-    assert response.status_code == 201, f"Expected status code 201, got {response.status_code}"
+    assert_status_code(response, 201)
 
     # 3. Verify response echoes payload and includes generated id
     body = response.json()
-    assert body["title"] == payload["title"], "Response title should echo request payload"
-    assert body["body"] == payload["body"], "Response body should echo request payload"
-    assert body["userId"] == payload["userId"], "Response userId should echo request payload"
-    assert "id" in body, "Response should include generated 'id'"
-    assert isinstance(body["id"], int), f"Expected generated id as int, got {type(body['id']).__name__}"
-    assert body["id"] > 0, "Generated id should be a positive integer"
+    assert_payload_echoed(body, payload, context="POST /posts response")
+    assert_auto_generated_id(body)
 
 
 def test_update_post_returns_200_and_echoes_payload(api_client: ApiClient):
@@ -119,14 +116,11 @@ def test_update_post_returns_200_and_echoes_payload(api_client: ApiClient):
     )
 
     # 2. Verify status code is 200
-    assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
+    assert_status_code(response, 200)
 
     # 3. Verify response echoes the full update payload
     body = response.json()
-    assert body["id"] == post_id, f"Response id should be {post_id}, got {body.get('id')}"
-    assert body["title"] == payload["title"], "Response title should echo request payload"
-    assert body["body"] == payload["body"], "Response body should echo request payload"
-    assert body["userId"] == payload["userId"], "Response userId should echo request payload"
+    assert_payload_echoed(body, payload, context=f"PUT /posts/{post_id} response")
 
 
 def test_delete_post_returns_200_or_204_with_empty_body(api_client: ApiClient):
@@ -139,10 +133,7 @@ def test_delete_post_returns_200_or_204_with_empty_body(api_client: ApiClient):
     response = api_client.delete(f"{POSTS_PATH}/{post_id}")
 
     # 2. Verify status code is either 200 or 204
-    assert response.status_code in (200, 204), (
-        f"Expected status code 200 or 204, got {response.status_code}"
-    )
+    assert_status_code_in(response, (200, 204))
 
     # 3. Verify response body is empty (simulated writes)
-    body = response.json()
-    assert body == {}, f"Expected empty response body after delete, got {body}"
+    assert_empty_body(response.json())
