@@ -1,3 +1,5 @@
+import os
+
 import pytest
 import requests
 
@@ -7,8 +9,18 @@ from src.api.config import ApiConfig
 
 @pytest.fixture(scope="session")
 def api_base_url(pytestconfig: pytest.Config) -> str:
-    configured_base_url = pytestconfig.getoption("api_base_url") or pytestconfig.getini("api_base_url")
-    return configured_base_url.rstrip("/")
+    """Resolve the API base URL using the priority chain:
+
+    1. ``--api-base-url`` CLI flag
+    2. ``API_BASE_URL`` environment variable
+    3. ``api_base_url`` value in ``pytest.ini``
+    """
+    url = (
+        pytestconfig.getoption("api_base_url")
+        or os.environ.get("API_BASE_URL")
+        or pytestconfig.getini("api_base_url")
+    )
+    return url.rstrip("/")
 
 
 @pytest.fixture(scope="session")

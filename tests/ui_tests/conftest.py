@@ -88,8 +88,8 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo):
 
 
 @pytest.fixture
-def login_page(page: Page) -> LoginPage:
-    login_page = LoginPage(page)
+def login_page(page: Page, ui_base_url: str) -> LoginPage:
+    login_page = LoginPage(page, base_url=ui_base_url)
     login_page.navigate()
     return login_page
 

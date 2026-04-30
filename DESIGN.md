@@ -4,7 +4,7 @@
 
 This project uses Python + pytest + Playwright for UI, and `requests` + pytest for API.
 
-- **Why Python/pytest: Fast to write, readable tests, rich fixture model, and a strong ecosystem (xdist, plugins, parametrize). Most importantly, all products at Modelyo are written in Python — keeping the automation framework in the same language eliminates context switching, makes collaboration with developers significantly easier, and demonstrates my ability to design and build a production-ready automation framework from scratch in Python when the business requires it.
+- **Why Python/pytest:** Fast to write, readable tests, rich fixture model, and a strong ecosystem (xdist, plugins, parametrize). Most importantly, most of the products at Modelyo are written in Python — keeping the automation framework in the same language eliminates context switching, makes collaboration with developers significantly easier, and demonstrates my ability to design and build a production-ready automation framework from scratch in Python when the business requires it.
 - **Why Playwright for UI:** better default auto-wait behavior, first-class modern browser support, stable locators, and cleaner debugging ergonomics for dynamic apps.
 - **Why not Selenium here:** Selenium is mature and still valid, but usually needs more explicit synchronization and framework glue to reach the same reliability level.
 
@@ -84,16 +84,6 @@ The critical issue: as the suite grows from 5 tests to 100+, tests that share im
    - Ability to spin up isolated "test tenants" or dedicated test users per worker (via `pytest-xdist` worker ID).
    - Ensure cart/inventory state is reset or isolated per test automatically, not manually in teardown.
    - Move from static JSON files to programmatic factories that generate data on-the-fly.
-
-2. **Environment-aware base URL injection** (extend `conftest.py`):
-   - Pull base URLs from environment variables (or fixture parametrization).
-   - Allow tests to run against different environments (local, staging, prod) without code changes.
-   - This directly addresses the hardcoded `Saucedemo` URL limitation noted in the DESIGN.
-
-3. **Assertion helpers + expected-vs-actual clarity** (new `test_utils/assertions.py`):
-   - Reusable assertion functions that produce structured, grep-able failure messages.
-   - Example: `assert_product_in_cart(actual_items, expected_sku, qty)` vs generic `assert expected == actual`.
-   - Reduces noise in failure logs and makes triage faster.
 
 **Why this first:** Because it's the inflection point. You can write 10 tests without it; you *cannot* write 100 reliable tests without it. Every downstream feature (CI matrix, parallel testing, environment parity, multi-user scenarios) depends on this foundation. It's the difference between a fragile suite that breaks under load vs. one that scales deterministically. Plus, it pays for itself within a week once the team starts writing more tests—they'll spend less time debugging false positives and more time finding real bugs.
 

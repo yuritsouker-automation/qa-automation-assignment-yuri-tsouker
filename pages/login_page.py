@@ -1,11 +1,20 @@
+import os
+
 from playwright.sync_api import Page
 
 
 class LoginPage:
-    URL = "https://www.saucedemo.com/"
+    URL_PATH = "/"
+    DEFAULT_BASE_URL = "https://www.saucedemo.com"
 
-    def __init__(self, page: Page):
+    def __init__(self, page: Page, base_url: str | None = None):
         self.page = page
+        self._base_url = (
+            base_url
+            or os.environ.get("UI_BASE_URL")
+            or self.DEFAULT_BASE_URL
+        ).rstrip("/")
+
         self.username_input = page.locator('[data-test="username"]')
         self.password_input = page.locator('[data-test="password"]')
         self.login_button = page.locator('[data-test="login-button"]')
@@ -19,7 +28,9 @@ class LoginPage:
         self.login_logo = page.locator('.login_logo')
 
     def navigate(self):
-        self.page.goto(self.URL)
+        self.page.goto(f"{self._base_url}{self.URL_PATH}")
+
+    # ...existing code...
 
     def login(self, username: str, password: str):
         self.username_input.fill(username)
