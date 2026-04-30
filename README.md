@@ -128,4 +128,4 @@ CI retains and uploads:
 
 - Playwright artifacts from `reports/playwright-report` (screenshots, videos, traces for failed tests)
 - Pytest HTML report from `reports/report.html` (summary of all test results)
-    
+
